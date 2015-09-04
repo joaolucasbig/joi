@@ -526,6 +526,74 @@ describe('any', function () {
             });
         });
 
+        it('sets value based on multiple conditions (without otherwise)', function (done) {
+
+            var schema = Joi.object({
+                a: Joi.number().required(),
+                b: Joi.number()
+                    .when('a', { is: 0, then: Joi.valid(1) })
+                    .when('a', { is: 1, then: Joi.valid(2) })
+                    .when('a', { is: 2, then: Joi.valid(3) })
+            });
+
+            Helper.validate(schema, [
+                [{ a: 0, b: 1 }, true],
+                [{ a: 0, b: 2 }, false],
+                [{ a: 1, b: 2 }, true],
+                [{ a: 1, b: 3 }, false],
+                [{ a: 2, b: 3 }, true],
+                [{ a: 2, b: 4 }, false],
+                [{ a: 42, b: 128 }, true]
+            ], done);
+        });
+
+        it('sets value based on multiple conditions (with otherwise)', function (done) {
+
+            var schema = Joi.object({
+                a: Joi.number().required(),
+                b: Joi.number()
+                    .when('a', { is: 0, then: Joi.valid(1) })
+                    .when('a', { is: 1, otherwise: Joi.valid(2) })
+                    .when('a', { is: 2, then: Joi.valid(3) })
+            });
+
+            Helper.validate(schema, [
+                [{ a: 0, b: 1 }, true],
+                [{ a: 0, b: 2 }, false],
+                [{ a: 1, b: 2 }, true],
+                [{ a: 1, b: 3 }, true],
+                [{ a: 2, b: 3 }, false],
+                [{ a: 2, b: 2 }, true],
+                [{ a: 42, b: 128 }, false],
+                [{ a: 42, b: 2 }, true]
+            ], done);
+        });
+
+        it('sets value based on multiple conditions (with base rules)', function (done) {
+
+            var schema = Joi.object({
+                a: Joi.number().required(),
+                b: Joi.number().valid(10)
+                    .when('a', { is: 0, then: Joi.valid(1) })
+                    .when('a', { is: 1, then: Joi.valid(2) })
+                    .when('a', { is: 2, then: Joi.valid(3) })
+            });
+
+            Helper.validate(schema, [
+                [{ a: 0, b: 1 }, true],
+                [{ a: 0, b: 2 }, false],
+                [{ a: 0, b: 10 }, true],
+                [{ a: 1, b: 2 }, true],
+                [{ a: 1, b: 3 }, false],
+                [{ a: 1, b: 10 }, true],
+                [{ a: 2, b: 3 }, true],
+                [{ a: 2, b: 4 }, false],
+                [{ a: 2, b: 10 }, true],
+                [{ a: 42, b: 128 }, false],
+                [{ a: 42, b: 10 }, true]
+            ], done);
+        });
+
         it('creates deep defaults', function (done) {
 
             var schema = Joi.object({
@@ -1284,6 +1352,37 @@ describe('any', function () {
                 [{ a: 'b' }, true],
                 [{ b: 5, a: 'x' }, true]
             ], done);
+        });
+
+        it('can describe as the original object', function (done) {
+
+            var schema = Joi.number().min(10).when('a', { is: 5, then: Joi.number().max(20).required() }).describe();
+            expect(schema).to.deep.equal({
+                type: 'number',
+                invalids: [Infinity, -Infinity],
+                rules: [{ name: 'min', arg: 10 }],
+                alternatives: [{
+                    ref: 'ref:a',
+                    is: {
+                        type: 'number',
+                        flags: {
+                            allowOnly: true,
+                            presence: 'required'
+                        },
+                        valids: [5],
+                        invalids: [Infinity, -Infinity]
+                    },
+                    then: {
+                        type: 'number',
+                        flags: {
+                            presence: 'required'
+                        },
+                        invalids: [Infinity, -Infinity],
+                        rules: [{ name: 'min', arg: 10 }, { name: 'max', arg: 20 }]
+                    }
+                }]
+            });
+            done();
         });
     });
 
