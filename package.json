@@ -2,7 +2,7 @@
   "name": "joi",
   "description": "Object schema validation",
   "version": "1.0.1",
-  "repository": "git://github.com/hapijs/joi",
+  "repository": "https://github.com/davidbenko9/joi",
   "main": "lib/index.js",
   "keywords": [
     "hapi",
