@@ -14,8 +14,8 @@
     "npm": ">=2.0.0"
   },
   "dependencies": {
-    "hoek": "^2.2.x",
-    "topo": "1.x.x",
+    "hoek": "^5.0.3",
+    "topo": "3.0.0",
     "isemail": "1.x.x",
     "moment": "2.x.x"
   },
